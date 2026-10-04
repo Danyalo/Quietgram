@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="QuietgramName" translatable="false">Quietgram</string>
     <string name="AppName" translatable="false">Quietgram</string>
     <string name="AppNameBeta" translatable="false">Quietgram</string>
 </resources>

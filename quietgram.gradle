@@ -7,6 +7,8 @@ if (!(quietgramCode ==~ /[1-9][0-9]*/) || quietgramCode.toLong() > 2100000000L) 
 android {
     defaultConfig {
         applicationId 'io.github.danyalo.quietgram'
+        // Generated resValues stay outside upstream's asset-string discard rules.
+        resValue 'string', 'quietgram_app_name', 'Quietgram'
         versionCode quietgramCode.toInteger()
         versionName "${APP_VERSION_NAME}-quietgram.${quietgramCode}"
     }

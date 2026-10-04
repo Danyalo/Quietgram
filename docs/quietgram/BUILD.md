@@ -4,6 +4,8 @@ The supported phone target is ARM64 (`afatFd_v8aRelease`). Packaging overrides l
 
 The release manifest retains the upstream SDK23 overlay's capabilities. When updating upstream, compare that overlay with `quietgram/AndroidManifest.xml` as well as reviewing the two UI patches.
 
+The OS-facing app label is a Gradle-generated `quietgram_app_name` resource. Keep it out of the source `values/strings.xml`: upstream's asset localization generator force-discards most source string resources from release APKs, so adding the label there would remove a manifest dependency during shrinking.
+
 ## Candidate pipeline
 
 `.github/workflows/quietgram-apk.yml` runs only on pushes to this repository's `quietgram` branch or a manual dispatch. It has read-only repository permissions and does not run on external pull requests. It fetches pinned submodules, builds native dependencies from source, then assembles an unsigned APK. The workflow uses JDK 21, SDK 36, Build Tools 36.0.0, NDK 27.2.12479018 and CMake 3.22.1. Other native host tools and the Rust stable toolchain currently come from the runner; byte-for-byte reproducibility is not yet claimed.
