@@ -28,8 +28,8 @@ jobs:
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
       - uses: android-actions/setup-android@v3
-      - name: Install build SDK
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
       - name: Compile patched sources
         # This checks Java/Kotlin/resources without native linking, signing,
         # private API credentials, or creating a phone-installable APK.
