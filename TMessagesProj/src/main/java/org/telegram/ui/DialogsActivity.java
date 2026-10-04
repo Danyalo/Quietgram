@@ -2809,6 +2809,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public boolean onFragmentCreate() {
+        if (arguments != null && arguments.getInt("folderId", 0) == 1) {
+            return false; // Quietgram does not expose the Archive screen.
+        }
         super.onFragmentCreate();
 
         if (arguments != null) {
@@ -4206,7 +4209,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     if (hasStories && !rightSlidingDialogContainer.hasFragment() && !fixScrollYAfterArchiveOpened) {
                         pTop -= dp(DialogStoriesCell.HEIGHT_IN_DP);
                     }
-                    boolean hasHiddenArchive = !fixScrollYAfterArchiveOpened && viewPage.dialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect && folderId == 0 && communityId == 0 && getMessagesController().hasHiddenArchive() && viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN;
+                    boolean hasHiddenArchive = !fixScrollYAfterArchiveOpened && viewPage.dialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect && folderId == 0 && communityId == 0 && hasHiddenArchive() && viewPage.archivePullViewState == ARCHIVE_ITEM_STATE_HIDDEN;
                     if ((hasHiddenArchive || (hasStories && !rightSlidingDialogContainer.hasFragment())) && dy < 0) {
                         viewPage.listView.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
                         int currentPosition = viewPage.layoutManager.findFirstVisibleItemPosition();
@@ -8970,7 +8973,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     public boolean hasHiddenArchive() {
-        return !onlySelect && initialDialogsType == DIALOGS_TYPE_DEFAULT && communityId == 0 && folderId == 0 && getMessagesController().hasHiddenArchive();
+        return false; // No Archive row means no Archive pull-down gesture.
     }
 
     private boolean waitingForDialogsAnimationEnd(ViewPage viewPage) {
@@ -11178,6 +11181,21 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @NonNull
     public ArrayList<TLRPC.Dialog> getDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
+        ArrayList<TLRPC.Dialog> dialogs = getUnfilteredDialogsArray(currentAccount, dialogsType, folderId, frozen);
+        long archiveId = DialogObject.makeFolderDialogId(1);
+        for (int i = 0; i < dialogs.size(); i++) {
+            if (dialogs.get(i).id == archiveId) {
+                // Keep server/controller state intact; filter only the UI folder row.
+                ArrayList<TLRPC.Dialog> visibleDialogs = new ArrayList<>(dialogs);
+                visibleDialogs.removeIf(dialog -> dialog.id == archiveId);
+                return visibleDialogs;
+            }
+        }
+        return dialogs;
+    }
+
+    @NonNull
+    public ArrayList<TLRPC.Dialog> getUnfilteredDialogsArray(int currentAccount, int dialogsType, int folderId, boolean frozen) {
         if (frozen && frozenDialogsList != null) {
             return frozenDialogsList;
         }
