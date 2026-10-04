@@ -20,6 +20,7 @@
 - [ ] Pull-down cannot expose or open Archive.
 - [ ] Other Archive navigation paths and restored Archive screens are blocked.
 - [ ] Archive settings and account switches do not restore Archive access.
+- [ ] Pinned-chat drag reordering works with Archive present in server state.
 - [ ] Contacts and local recipient selection work; recipient pickers cannot discover remote users/channels via global Search.
 - [ ] Search within a conversation works.
 - [ ] Direct messages, secret chats, forwarding, attachments, media, and calls work.

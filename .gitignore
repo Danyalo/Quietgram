@@ -1,5 +1,6 @@
 .idea/
 .gradle/
+.kotlin/
 .cxx/
 build/
 obj/
