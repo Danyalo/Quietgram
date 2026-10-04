@@ -3301,6 +3301,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         fragmentSearchField.editText.addTextChangedListener(fragmentSearchFieldWatcher = new SearchTextWatcher(fragmentSearchField.editText, new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
             @Override
             public void onSearchExpand() {
+                if (!isSupportSearch()) {
+                    return;
+                }
                 searching = true;
                 if (switchItem != null) {
                     switchItem.setVisibility(View.GONE);
@@ -3402,7 +3405,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
             @Override
             public boolean canToggleSearch() {
-                return !actionBar.isActionModeShowed() && databaseMigrationHint == null;// && !rightSlidingDialogContainer.hasFragment();
+                return isSupportSearch() && !actionBar.isActionModeShowed() && databaseMigrationHint == null;// && !rightSlidingDialogContainer.hasFragment();
             }
         }));
         fragmentSearchField.setSearchFiltersListener(new FragmentSearchField.SearchFiltersListener() {
@@ -7532,6 +7535,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void showSearch(boolean show, boolean startFromDownloads, boolean animated, boolean forceNotOnlyDialogs) {
+        if (show && !isSupportSearch()) {
+            return;
+        }
         animatorSearchVisible.setValue(show, animated);
 
         if (!show) {
@@ -12913,7 +12919,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     public boolean getAllowGlobalSearch() {
-        return allowGlobalSearch;
+        return false; // Quietgram keeps recipient selection local.
     }
 
     @Override
@@ -14329,7 +14335,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean isSupportSearch() {
-        return initialDialogsType != DIALOGS_TYPE_ADD_USERS_TO;
+        return onlySelect && initialDialogsType != DIALOGS_TYPE_ADD_USERS_TO;
     }
 
     public long getCommunityId() {
