@@ -1,0 +1,95 @@
+name: Quietgram APK candidate
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [quietgram]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quietgram-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.repository == 'Danyalo/Quietgram'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      ABIS: arm64-v8a
+      JOBS: '4'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0 ndk;27.2.12479018 cmake;3.22.1'
+      - name: Install native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build meson nasm yasm gperf pkg-config
+          rustup target add --toolchain stable aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+      - name: Build pinned native dependencies
+        run: |
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          TMessagesProj/jni/prebuild/build_all.sh
+      - name: Compile unsigned ARM64 APK
+        env:
+          ORG_GRADLE_PROJECT_APP_ID: ${{ secrets.APP_ID }}
+          ORG_GRADLE_PROJECT_APP_HASH: ${{ secrets.APP_HASH }}
+          ORG_GRADLE_PROJECT_CHECK_UPDATES: '0'
+          ORG_GRADLE_PROJECT_QUIETGRAM_VERSION_CODE: '1'
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess
+          app_id = os.environ.get('ORG_GRADLE_PROJECT_APP_ID', '')
+          app_hash = os.environ.get('ORG_GRADLE_PROJECT_APP_HASH', '')
+          if not re.fullmatch(r'[1-9][0-9]*', app_id) or int(app_id) > 2147483647:
+              raise SystemExit('APP_ID must contain a positive numeric Telegram API ID')
+          if not re.fullmatch(r'[0-9a-fA-F]{32}', app_hash):
+              raise SystemExit('APP_HASH must contain a 32-character Telegram API hash')
+          print('Telegram API secret formats validated; values are not printed.')
+          # Command-line project properties override the upstream zero placeholders.
+          result = subprocess.run([
+              './gradlew', '--no-daemon', ':TMessagesProj_App:assembleAfatFd_v8aRelease',
+              '-Parm64-v8a', '-x', 'buildNativeDeps',
+              '-PAPP_ID=' + app_id, '-PAPP_HASH=' + app_hash,
+              '-PCHECK_UPDATES=0', '-PQUIETGRAM_VERSION_CODE=1',
+          ])
+          raise SystemExit(result.returncode)
+          PY
+      - name: Verify candidate packaging
+        run: |
+          mkdir -p candidate
+          cp TMessagesProj_App/build/outputs/apk/afatFd_v8a/release/app.apk candidate/Quietgram-arm64-unsigned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging candidate/Quietgram-arm64-unsigned.apk > candidate/packaging.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('candidate/packaging.txt').read_text()
+          for required in ["name='io.github.danyalo.quietgram'", "versionCode='1'", "application-label:'Quietgram'", "native-code: 'arm64-v8a'"]:
+              if required not in text:
+                  raise SystemExit('Candidate packaging mismatch: ' + required)
+          PY
+          if "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify candidate/Quietgram-arm64-unsigned.apk; then
+            echo 'Candidate unexpectedly has a signature; refusing to upload.'
+            exit 1
+          fi
+          git rev-parse HEAD > candidate/source-commit.txt
+          sha256sum candidate/Quietgram-arm64-unsigned.apk > candidate/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quietgram-arm64-unsigned
+          path: candidate/
+          if-no-files-found: error
+          retention-days: 14

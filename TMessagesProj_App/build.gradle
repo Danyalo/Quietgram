@@ -330,3 +330,5 @@ android {
         checkReleaseBuilds false
     }
 }
+
+apply from: rootProject.file('quietgram.gradle')
