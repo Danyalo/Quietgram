@@ -20,7 +20,7 @@ key_directory = args.key_directory.resolve()
 if output.exists() or output == apk:
     parser.error('Output must be a new file')
 tools = args.sdk / 'build-tools' / '36.0.0'
-badging = subprocess.check_output([str(tools / 'aapt'), 'dump', 'badging', str(apk)], text=True)
+badging = subprocess.check_output([str(tools / 'aapt2'), 'dump', 'badging', str(apk)], text=True)
 if "name='io.github.danyalo.quietgram'" not in badging or "application-label:'Quietgram'" not in badging:
     parser.error('Input APK must have Quietgram identity')
 if subprocess.run([str(tools / 'apksigner'), 'verify', str(apk)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:

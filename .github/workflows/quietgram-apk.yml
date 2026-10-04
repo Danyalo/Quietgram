@@ -45,6 +45,7 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
           TMessagesProj/jni/prebuild/build_all.sh
       - name: Compile unsigned ARM64 APK
+        id: compile
         env:
           ORG_GRADLE_PROJECT_APP_ID: ${{ secrets.APP_ID }}
           ORG_GRADLE_PROJECT_APP_HASH: ${{ secrets.APP_HASH }}
@@ -73,7 +74,9 @@ jobs:
         run: |
           mkdir -p candidate
           cp TMessagesProj_App/build/outputs/apk/afatFd_v8a/release/app.apk candidate/Quietgram-arm64-unsigned.apk
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging candidate/Quietgram-arm64-unsigned.apk > candidate/packaging.txt
+          git rev-parse HEAD > candidate/source-commit.txt
+          sha256sum candidate/Quietgram-arm64-unsigned.apk > candidate/SHA256SUMS
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging candidate/Quietgram-arm64-unsigned.apk > candidate/packaging.txt
           python3 - <<'PY'
           from pathlib import Path
           text = Path('candidate/packaging.txt').read_text()
@@ -85,9 +88,9 @@ jobs:
             echo 'Candidate unexpectedly has a signature; refusing to upload.'
             exit 1
           fi
-          git rev-parse HEAD > candidate/source-commit.txt
-          sha256sum candidate/Quietgram-arm64-unsigned.apk > candidate/SHA256SUMS
       - uses: actions/upload-artifact@v4
+        # Preserve the binary for diagnosis if packaging inspection fails.
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         with:
           name: Quietgram-arm64-unsigned
           path: candidate/
