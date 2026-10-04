@@ -23,6 +23,14 @@ Keep project setup, app identity, Search restrictions, and Archive restrictions 
 6. Run build checks and the phone checklist. Update this document with the new base and commit the provenance change.
 7. Publish a new immutable source tag and signed APK only after validation.
 
+For steps 2–4, use the helper after fetching and verifying the chosen release:
+
+```sh
+bash scripts/quietgram-rebase.sh OLD_BASE NEW_BASE quietgram-update-VERSION
+```
+
+The helper refuses a dirty tree or an existing candidate branch, preserves the previous branch, and prints the patch range-diff. If a conflict occurs, resolve it on the candidate and run `git rebase --continue`, or return to the previous branch with `git rebase --abort`. It does not publish or update the provenance document automatically.
+
 ## Build baseline
 
 Upstream requests Gradle 8.13, SDK 36, Build Tools 36.0.0, NDK 27.2.12479018, and CMake 3.22.1. Its current CI uses JDK 17. Native dependencies and all submodules are needed for an APK; Java configuration checks require at least the `TMessagesProj/lib/jlatexmath` and `TMessagesProj_Modules/media` submodules.
