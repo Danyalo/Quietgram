@@ -1,3 +1,17 @@
+# Quietgram
+
+A personal, unofficial [Forkgram](https://github.com/forkgram/TelegramAndroid) fork for GrapheneOS. The intended changes hide global Search and Archive UI access while preserving ordinary messaging and Forkgram notifications.
+
+**Work in progress: no installable Quietgram release yet.** Individual archived chats may still open through links, notifications, forwarded messages, and custom chat folders. This project intentionally does not block individual chats.
+
+- [Project checklist](docs/quietgram/TODO.md)
+- [Upstream base and update procedure](docs/quietgram/UPSTREAM.md)
+- [Release and phone checks](docs/quietgram/RELEASE_CHECKLIST.md)
+
+The original license and attribution remain below. The original download links refer to Forkgram, not Quietgram. Inherited publishing workflows are restricted to the upstream repository; Quietgram releases will use a separate workflow.
+
+---
+
 # Fork Client — Unofficial Telegram Messenger for Android
 ![image](https://raw.githubusercontent.com/Forkgram/TelegramAndroid/58938f6bbe4159b90c38d9b94c9a70d57bedf3e0/TMessagesProj/src/main/res/drawable-xxhdpi/ic_launcher.png)  
 Fork Client is a fork of the official Telegram for Android application.  
