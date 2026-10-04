@@ -1,0 +1,36 @@
+name: Quietgram Java check
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [quietgram]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quietgram-java-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    if: github.repository == 'Danyalo/Quietgram'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Java submodules
+        run: git submodule update --init --depth=1 TMessagesProj/lib/jlatexmath TMessagesProj_Modules/media
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v3
+      - name: Install build SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Compile patched sources
+        # This checks Java/Kotlin/resources without native linking, signing,
+        # private API credentials, or creating a phone-installable APK.
+        run: ./gradlew --no-daemon :TMessagesProj:compileReleaseJavaWithJavac -x buildNativeDeps
