@@ -18,6 +18,19 @@ Pass `-PQUIETGRAM_VERSION_CODE=N` when preparing a release. This is the final An
 
 Unsigned builds are the default. The public upstream test signing key is explicitly removed from Quietgram's release configuration. A real signed build must supply `RELEASE_KEYSTORE_FILE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_PASSWORD`, and `RELEASE_KEY_ALIAS` as Gradle project properties. The private signing key must remain consistent across phone updates and must have a user-controlled backup before the first release.
 
+Alternatively, build the candidate in CI and sign it locally. This keeps the release key off GitHub:
+
+```sh
+python3 scripts/quietgram-key.py /absolute/private/new-key-directory
+python3 scripts/quietgram-sign.py candidate/Quietgram-arm64-unsigned.apk \
+  /absolute/private/new-key-directory /absolute/output/Quietgram-arm64.apk \
+  --sdk /absolute/android/sdk
+```
+
+Run key creation once. It creates an encrypted PKCS12 keystore with a random password, restricts directory/file permissions, and writes a public certificate fingerprint. The password file is plain text; save it and the keystore in a password vault or encrypted backup. Key creation refuses an existing directory and refuses writing inside the source checkout. Signing refuses an existing output and an already signed input, aligns the APK for 16 KB native pages, verifies the signature and saved certificate fingerprint, and writes an APK checksum and verification report. Never publish the private key directory.
+
+Initial release certificate SHA-256 (public): `94053625d551a1558bffa4d6e2a104ca9df8d55ba482b15c9fa3c48fc4211989`.
+
 ## Local packaging check
 
 This checks the manifest and resources without compiling native dependencies or using API secrets:
