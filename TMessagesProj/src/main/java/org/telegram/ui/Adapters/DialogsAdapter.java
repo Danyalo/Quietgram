@@ -1153,7 +1153,9 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
             fromDialog.pinnedNum = toDialog.pinnedNum;
             toDialog.pinnedNum = oldNum;
         }
-        Collections.swap(dialogs, fromIndex, toIndex);
+        // UI indices exclude Archive; keep pinned reordering in the source list.
+        ArrayList<TLRPC.Dialog> unfilteredDialogs = parentFragment.getUnfilteredDialogsArray(currentAccount, dialogsType, folderId, false);
+        Collections.swap(unfilteredDialogs, unfilteredDialogs.indexOf(fromDialog), unfilteredDialogs.indexOf(toDialog));
         updateList(null);
     }
 
@@ -1395,7 +1397,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int size = itemInternals.size();
-            boolean hasArchive = folderId == 0 && dialogsType == 0 && MessagesController.getInstance(currentAccount).dialogs_dict.get(DialogObject.makeFolderDialogId(1)) != null;
+            boolean hasArchive = false; // Quietgram never displays the Archive row.
             View parent = (View) getParent();
             int height;
             int blurOffset = 0;

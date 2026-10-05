@@ -1,0 +1,36 @@
+// Keep packaging overrides separate from the upstream UI/notification code.
+def quietgramCode = providers.gradleProperty('QUIETGRAM_VERSION_CODE').getOrElse('1')
+if (!(quietgramCode ==~ /[1-9][0-9]*/) || quietgramCode.toLong() > 2100000000L) {
+    throw new GradleException('QUIETGRAM_VERSION_CODE must be between 1 and 2100000000')
+}
+
+android {
+    defaultConfig {
+        applicationId 'io.github.danyalo.quietgram'
+        // Generated resValues stay outside upstream's asset-string discard rules.
+        resValue 'string', 'quietgram_app_name', 'Quietgram'
+        versionCode quietgramCode.toInteger()
+        versionName "${APP_VERSION_NAME}-quietgram.${quietgramCode}"
+    }
+    productFlavors.all { flavor ->
+        flavor.applicationId = 'io.github.danyalo.quietgram'
+    }
+    buildTypes {
+        debug { applicationIdSuffix '.debug' }
+        HA { applicationIdSuffix '.debug' }
+        release {
+            applicationIdSuffix ''
+            // Never use the public upstream test key for a Quietgram release.
+            if (!project.hasProperty('RELEASE_KEYSTORE_FILE')) {
+                signingConfig null
+            }
+        }
+    }
+    sourceSets.release.manifest.srcFile rootProject.file('quietgram/AndroidManifest.xml')
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            // An independent counter avoids upstream's ABI/version multipliers.
+            output.versionCodeOverride = quietgramCode.toInteger()
+        }
+    }
+}

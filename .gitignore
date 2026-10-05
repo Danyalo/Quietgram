@@ -1,5 +1,8 @@
 .idea/
 .gradle/
+.kotlin/
+__pycache__/
+*.p12
 .cxx/
 build/
 obj/

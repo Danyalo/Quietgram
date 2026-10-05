@@ -5,6 +5,7 @@ on:
 
 jobs:
   linux:
+    if: github.repository == 'forkgram/TelegramAndroid'
     name: Deploy
     runs-on: ubuntu-latest
     steps:
